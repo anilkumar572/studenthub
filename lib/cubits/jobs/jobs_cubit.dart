@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../models/job.dart';
+import '../../dummy_data.dart';
 
 // Events
 abstract class JobsEvent extends Equatable {
@@ -58,30 +59,25 @@ class JobsCubit extends Cubit<JobsState> {
   Future<void> loadJobs() async {
     try {
       emit(JobsLoading());
-      // TODO: Replace with actual data fetching logic
-      final mockJobs = [
-        Job(
-          id: '1',
-          title: 'Software Engineer',
-          company: 'Tech Corp',
-          location: 'Remote',
-          description: 'Looking for experienced software engineers',
-          applyLink: 'https://example.com/job1',
-          postedDate: DateTime(2024, 3, 1),
-          requirements: ['3+ years experience', 'Python', 'Django'],
-        ),
-        Job(
-          id: '2',
-          title: 'Data Scientist',
-          company: 'Data Inc',
-          location: 'New York',
-          description: 'Join our data science team',
-          applyLink: 'https://example.com/job2',
-          postedDate: DateTime(2024, 3, 15),
-          requirements: ['Machine Learning', 'Python', 'SQL'],
-        ),
-      ];
-      emit(JobsLoaded(mockJobs));
+      // Convert dummy data to Job objects
+      final jobs = DummyData.jobs
+          .map((jobData) => Job(
+                id: jobData['id'] ?? '',
+                title: jobData['title'] ?? '',
+                company: jobData['company'] ?? '',
+                location: jobData['location'] ?? '',
+                description: jobData['description'] ?? '',
+                category: jobData['category'] ?? 'Other',
+                applicationUrl: jobData['applyLink'] ??
+                    'https://example.com/apply/${jobData['id']}',
+                postedDate: DateTime.now()
+                    .subtract(Duration(days: int.parse(jobData['id'] ?? '1'))),
+                requirements: List<String>.from(jobData['requirements'] ?? []),
+                salary: jobData['salary'] ?? 'Not specified',
+                type: jobData['type'] ?? 'Full-time',
+              ))
+          .toList();
+      emit(JobsLoaded(jobs));
     } catch (e) {
       emit(JobsError(e.toString()));
     }

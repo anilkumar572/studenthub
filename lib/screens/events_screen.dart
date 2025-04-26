@@ -1,237 +1,244 @@
+import 'package:demo/dummy_data.dart';
+import 'package:demo/models/event.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../cubits/events/events_cubit.dart';
-import '../models/event.dart';
 
-class EventsScreen extends StatelessWidget {
+import '../widgets/custom_search_bar.dart';
+
+class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+  State<EventsScreen> createState() => _EventsScreenState();
+}
 
+class _EventsScreenState extends State<EventsScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  List<Event> _filteredEvents = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredEvents = DummyData.events;
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _searchQuery = query;
+      _filteredEvents = DummyData.events.where((event) {
+        final titleLower = event.title.toLowerCase();
+        final descriptionLower = event.description.toLowerCase();
+        final searchLower = query.toLowerCase();
+        return titleLower.contains(searchLower) ||
+            descriptionLower.contains(searchLower);
+      }).toList();
+    });
+  }
+
+  void _clearSearch() {
+    setState(() {
+      _searchController.clear();
+      _searchQuery = '';
+      _filteredEvents = DummyData.events;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar.medium(
-            title: const Text('Events'),
-            centerTitle: true,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.search_rounded),
-                onPressed: () {
-                  // TODO: Implement search
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.filter_list_rounded),
-                onPressed: () {
-                  // TODO: Implement filters
-                },
-              ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      colorScheme.primaryContainer,
-                      colorScheme.surface,
-                    ],
-                  ),
-                ),
+          // SliverAppBar(
+          //   floating: true,
+          //   pinned: true,
+          //   expandedHeight: 120,
+          //   flexibleSpace: FlexibleSpaceBar(
+          //     title: const Text('Events'),
+          //     background: Container(
+          //       decoration: BoxDecoration(
+          //         gradient: LinearGradient(
+          //           begin: Alignment.topCenter,
+          //           end: Alignment.bottomCenter,
+          //           colors: [
+          //             Theme.of(context).primaryColor,
+          //             Theme.of(context).primaryColor.withOpacity(0.8),
+          //           ],
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: CustomSearchBar(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                onClear: _clearSearch,
+                hintText: 'Search events...',
               ),
             ),
           ),
-          BlocBuilder<EventsCubit, EventsState>(
-            builder: (context, state) {
-              if (state is EventsInitial) {
-                context.read<EventsCubit>().loadEvents();
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              if (state is EventsLoading) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              if (state is EventsError) {
-                return SliverFillRemaining(
-                  child: Center(child: Text('Error: ${state.message}')),
-                );
-              }
-
-              if (state is EventsLoaded) {
-                return _buildEventsList(context, state.events);
-              }
-
-              return const SliverFillRemaining(
-                child: Center(child: Text('Unknown state')),
-              );
-            },
-          ),
+          if (_filteredEvents.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: Text(
+                  'No events found',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final event = _filteredEvents[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    child: Card(
+                      elevation: 2,
+                      child: InkWell(
+                        onTap: () {
+                          // Navigate to event details
+                          Navigator.pushNamed(
+                            context,
+                            '/event-details',
+                            arguments: event,
+                          );
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AspectRatio(
+                              aspectRatio: 16 / 9,
+                              child: Image.asset(
+                                event.imageUrl ??
+                                    'assets/images/placeholder.png',
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .primaryColor
+                                          .withOpacity(0.1),
+                                    ),
+                                    child: Center(
+                                      child: Icon(
+                                        _getCategoryIcon(event.category),
+                                        size: 48,
+                                        color: Theme.of(context).primaryColor,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    event.title,
+                                    style:
+                                        Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        flex: 2,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.calendar_today,
+                                                size: 16),
+                                            const SizedBox(width: 4),
+                                            Flexible(
+                                              child: Text(
+                                                event.date
+                                                    .toString()
+                                                    .split(' ')[0],
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Flexible(
+                                        flex: 3,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.location_on,
+                                                size: 16),
+                                            const SizedBox(width: 4),
+                                            Flexible(
+                                              child: Text(
+                                                event.location,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    event.description,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                childCount: _filteredEvents.length,
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildEventsList(BuildContext context, List<Event> events) {
-    if (events.isEmpty) {
-      return const SliverFillRemaining(
-        child: Center(
-          child: Text('No events found'),
-        ),
-      );
-    }
-
-    return SliverPadding(
-      padding: const EdgeInsets.all(16.0),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final event = events[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: _buildEventCard(context, event),
-            );
-          },
-          childCount: events.length,
-        ),
-      ),
-    );
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
-  Widget _buildEventCard(BuildContext context, Event event) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          // TODO: Show event details
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  image: DecorationImage(
-                    image: NetworkImage(event.imageUrl),
-                    fit: BoxFit.cover,
-                    onError: (_, __) {},
-                  ),
-                ),
-                child: event.imageUrl.isEmpty
-                    ? Center(
-                        child: Text(
-                          event.title[0],
-                          style: TextStyle(
-                            fontSize: 48,
-                            color: colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                      )
-                    : null,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event.title,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_rounded,
-                        size: 16,
-                        color: colorScheme.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${event.date.toString().split(' ')[0]} at ${event.time}',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_rounded,
-                        size: 16,
-                        color: colorScheme.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        event.location,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (event.description.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      event.description,
-                      style: textTheme.bodyMedium,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          event.category,
-                          style: TextStyle(
-                            color: colorScheme.onSecondaryContainer,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.share_rounded),
-                        onPressed: () {
-                          // TODO: Implement share functionality
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'mobile':
+        return Icons.phone_android;
+      case 'web':
+        return Icons.web;
+      case 'ai/ml':
+        return Icons.psychology;
+      case 'devops':
+        return Icons.cloud_circle;
+      case 'design':
+        return Icons.design_services;
+      default:
+        return Icons.event;
+    }
   }
 }

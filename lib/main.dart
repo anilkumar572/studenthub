@@ -1,17 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'cubits/events/events_cubit.dart';
-import 'cubits/colleges/colleges_cubit.dart';
-import 'cubits/resources/resources_cubit.dart';
 import 'cubits/jobs/jobs_cubit.dart';
-import 'screens/home_screen.dart';
-import 'screens/college_directory_screen.dart';
-import 'screens/resources_screen.dart';
+import 'cubits/resources_cubit.dart';
+
+import 'screens/auth_wrapper.dart';
+
 import 'screens/events_screen.dart';
 import 'screens/jobs_screen.dart';
+import 'screens/job_details_screen.dart';
+import 'screens/event_details_screen.dart';
+import 'screens/roadmap_details_screen.dart';
+import 'screens/edit_profile_screen.dart';
 
-void main() {
+import 'models/job.dart';
+import 'models/event.dart';
+import 'models/roadmap.dart';
+
+import 'screens/home_screen.dart';
+import 'screens/resources_screen.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -22,13 +39,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => EventsCubit()),
-        BlocProvider(create: (context) => CollegesCubit()),
-        BlocProvider(create: (context) => ResourcesCubit()),
         BlocProvider(create: (context) => JobsCubit()),
+        BlocProvider(create: (context) => EventsCubit()),
+        BlocProvider(create: (context) => ResourcesCubit()),
       ],
       child: MaterialApp(
-        title: 'Engineering College Resource Hub',
+        title: 'Student Hub',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
@@ -60,6 +76,63 @@ class MyApp extends StatelessWidget {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: const Color(0xFF6750A4),
+            ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.grey[50],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF6750A4), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFEF5350), width: 2),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFEF5350), width: 2),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6750A4),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF6750A4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          navigationBarTheme: NavigationBarThemeData(
+            elevation: 0,
+            backgroundColor: Colors.white,
+            indicatorColor: const Color(0xFF6750A4).withOpacity(0.1),
+            labelTextStyle: WidgetStateProperty.all(
+              GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ),
@@ -95,8 +168,84 @@ class MyApp extends StatelessWidget {
               color: Colors.white,
             ),
           ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.grey[900],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF03DAC6), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFEF5350), width: 2),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFEF5350), width: 2),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF03DAC6),
+              foregroundColor: Colors.black,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF03DAC6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          navigationBarTheme: NavigationBarThemeData(
+            elevation: 0,
+            backgroundColor: Colors.grey[900],
+            indicatorColor: const Color(0xFF03DAC6).withOpacity(0.1),
+            labelTextStyle: WidgetStateProperty.all(
+              GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
         ),
-        home: const MainScreen(),
+        home: const AuthWrapper(),
+        routes: {
+          '/main': (context) => const MainScreen(),
+          '/events': (context) => const EventsScreen(),
+          '/jobs': (context) => const JobsScreen(),
+          '/edit-profile': (context) => const EditProfileScreen(),
+          '/job-details': (context) {
+            final job = ModalRoute.of(context)!.settings.arguments as Job;
+            return JobDetailsScreen(job: job);
+          },
+          '/event-details': (context) {
+            final event = ModalRoute.of(context)!.settings.arguments as Event;
+            return EventDetailsScreen(event: event);
+          },
+          '/roadmap-details': (context) {
+            final roadmap =
+                ModalRoute.of(context)!.settings.arguments as Roadmap;
+            return RoadmapDetailsScreen(roadmap: roadmap);
+          },
+        },
       ),
     );
   }
@@ -114,7 +263,6 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const CollegeDirectoryScreen(),
     const ResourcesScreen(),
     const EventsScreen(),
     const JobsScreen(),
@@ -141,11 +289,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home_rounded),
             label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.school_outlined),
-            selectedIcon: Icon(Icons.school_rounded),
-            label: 'Colleges',
           ),
           NavigationDestination(
             icon: Icon(Icons.book_outlined),

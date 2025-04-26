@@ -1,6 +1,6 @@
+import 'package:demo/models/event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import '../../models/event.dart';
 
 // Events
 abstract class EventsEvent extends Equatable {

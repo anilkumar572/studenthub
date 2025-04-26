@@ -36,13 +36,23 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter_bloc: ^8.1.3
   equatable: ^2.0.5
-  http: ^1.1.0
+  http: ^1.2.0
   sqflite: ^2.3.0
   path: ^1.8.3
   shared_preferences: ^2.2.2
   intl: ^0.18.1
   provider: ^6.1.1
   google_fonts: ^6.1.0
+  cached_network_image: ^3.3.1
+  flutter_markdown: ^0.6.18
+  url_launcher: ^6.3.1
+  flutter_svg: ^2.0.9
+  flutter_dotenv: ^5.1.0
+  google_generative_ai: ^0.2.0
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  
 
 dev_dependencies:
   flutter_test:
@@ -67,9 +77,24 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - .env
+    - assets/images/
+    - assets/logos/
+    - assets/resources/
+    # - assets/icons/  # Commenting out since it's not needed
+    # - assets/logos/flutter.png
+    # - assets/logos/web.png
+    # - assets/logos/ml.png
+    # - assets/logos/cloud.png
+    # - assets/logos/blockchain.png
+    # - assets/logos/ios.png
+    # - assets/logos/data.png
+    # - assets/logos/game.png
+    # - assets/logos/security.png
+    # - assets/logos/arvr.png
+    # - assets/logos/design.png
+    # - assets/logos/backend.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -88,11 +113,3 @@ flutter:
   #       - asset: fonts/Schyler-Regular.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
